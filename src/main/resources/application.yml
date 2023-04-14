@@ -1,0 +1,26 @@
+---
+server:
+  port: 3001
+
+spring:
+  profiles:
+    active: dev
+---
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    username: sa
+    url: jdbc:sqlserver://DESKTOP-DMRNDGC\NNHATTHIEN;databaseName=user_registration;encrypt=true;trustServerCertificate=true;
+    password: '12345'
+  jpa:
+    hibernate:
+      dialect: org.hibernate.dialect.SQLServer2016Dialect
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: 'true'
+    show-sql: 'true'
