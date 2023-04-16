@@ -5,6 +5,8 @@ import com.wolfalone.springsecuritybasic.entity.VerificationToken;
 import com.wolfalone.springsecuritybasic.model.UserModel;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public interface IUserService {
 
@@ -15,4 +17,16 @@ public interface IUserService {
     String validateVerificationToken(String token);
 
     VerificationToken generateNewVerificationToken(String oldToken);
+
+    User findUserByEmail(String email);
+
+    void createPasswordResetTokenForUser(User user, String token);
+
+    String validatePasswordResetToken(String token);
+
+    Optional<User> getUserByPasswordResetToken(String token);
+
+    void changePassword(User user, String newPassword);
+
+    boolean checkIfValidOldPassoword(User user, String oldPassword);
 }

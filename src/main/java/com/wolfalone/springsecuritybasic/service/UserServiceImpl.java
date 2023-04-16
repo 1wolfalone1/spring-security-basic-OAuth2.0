@@ -1,15 +1,18 @@
 package com.wolfalone.springsecuritybasic.service;
 
+import com.wolfalone.springsecuritybasic.entity.PasswordResetToken;
 import com.wolfalone.springsecuritybasic.entity.User;
 import com.wolfalone.springsecuritybasic.entity.VerificationToken;
 import com.wolfalone.springsecuritybasic.model.UserModel;
 import com.wolfalone.springsecuritybasic.repository.IUserRepo;
 import com.wolfalone.springsecuritybasic.repository.IVerificationTokenRepo;
+import com.wolfalone.springsecuritybasic.repository.PasswordResetTokenRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -17,6 +20,10 @@ public class UserServiceImpl implements IUserService{
 
     @Autowired
     private IUserRepo userRepo;
+
+
+    @Autowired
+    private PasswordResetTokenRepo passwordResetTokenRepo;
 
     @Autowired
     private IVerificationTokenRepo verificationTokenRepo;
@@ -69,5 +76,52 @@ public class UserServiceImpl implements IUserService{
         verificationTokenRepo.save(verificationToken);
         return verificationToken;
 
+    }
+
+    @Override
+    public User findUserByEmail(String email) {
+        return userRepo.findByEmail(email);
+    }
+
+    @Override
+    public void createPasswordResetTokenForUser(User user, String token) {
+        PasswordResetToken passwordResetToken = new PasswordResetToken(user, token);
+        passwordResetTokenRepo.save(passwordResetToken);
+    }
+
+    @Override
+    public String validatePasswordResetToken(String token) {
+        PasswordResetToken passwordResetToken =
+                passwordResetTokenRepo.findByToken(token);
+        if(passwordResetToken == null){
+            return "invalid";
+        }
+
+        User user = passwordResetToken.getUser();
+        Calendar cal = Calendar.getInstance();
+
+        if(passwordResetToken.getExpirationTime().getTime() <= cal.getTime().getTime()){
+            passwordResetTokenRepo.delete(passwordResetToken);
+            return "expired";
+        }
+        user.setEnabled(true);
+        userRepo.save(user);
+        return "valid";
+    }
+
+    @Override
+    public Optional<User> getUserByPasswordResetToken(String token) {
+        return Optional.ofNullable(passwordResetTokenRepo.findByToken(token).getUser());
+    }
+
+    @Override
+    public void changePassword(User user, String newPassword) {
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepo.save(user);
+    }
+
+    @Override
+    public boolean checkIfValidOldPassoword(User user, String oldPassword) {
+        return passwordEncoder.matches(oldPassword, user.getPassword());
     }
 }
